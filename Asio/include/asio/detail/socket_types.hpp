@@ -282,7 +282,7 @@ struct sockaddr_un_type { u_short sun_family; char sun_path[108]; }; //u16 + u8*
 #  define ASIO_OS_DEF_AI_ADDRCONFIG 0
 # endif
 # if defined (_WIN32_WINNT)
-const int max_iov_len = 64;
+const int max_iov_len = 64;		//最大的io缓冲区长度
 # else
 const int max_iov_len = 16;
 # endif
@@ -401,7 +401,7 @@ typedef int signed_size_type; //
 #  define ASIO_OS_DEF_AI_ADDRCONFIG 0
 # endif
 # if defined(IOV_MAX)
-const int max_iov_len = IOV_MAX;
+const int max_iov_len = IOV_MAX;	//readv和writev允许单个系统调用读入到或写出自一个或多个缓冲区【iovec结构数组中元素的数目存在某个限制（IOV_MAX】
 # else
 // POSIX platforms are not required to define IOV_MAX.
 const int max_iov_len = 16;

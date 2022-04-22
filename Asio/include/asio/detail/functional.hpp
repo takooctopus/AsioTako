@@ -1,4 +1,5 @@
 //
+// TAKO: std::function对象是对C++中现有的可调用实体的一种类型安全的包裹
 // detail/functional.hpp
 // ~~~~~~~~~~~~~~~~~~~~~
 //

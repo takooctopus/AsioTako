@@ -1,4 +1,5 @@
 //
+// TAKO: 内存缓冲定义
 // buffer.hpp
 // ~~~~~~~~~~
 //
@@ -22,11 +23,11 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "asio/detail/array_fwd.hpp"
-#include "asio/detail/memory.hpp"
-#include "asio/detail/string_view.hpp"
-#include "asio/detail/throw_exception.hpp"
-#include "asio/detail/type_traits.hpp"
+#include "asio/detail/array_fwd.hpp"    //引入标准库的array
+#include "asio/detail/memory.hpp"   //内存相关函数
+#include "asio/detail/string_view.hpp"  //stringview
+#include "asio/detail/throw_exception.hpp"  //抛异常
+#include "asio/detail/type_traits.hpp"  //模板类型转换
 
 #if defined(ASIO_MSVC) && (ASIO_MSVC >= 1700)
 # if defined(_HAS_ITERATOR_DEBUGGING) && (_HAS_ITERATOR_DEBUGGING != 0)
@@ -67,19 +68,21 @@
 
 namespace asio {
 
-class mutable_buffer;
-class const_buffer;
+class mutable_buffer;   //前置声明 可变缓冲区
+class const_buffer; //前置声明 固定缓冲区
 
 /// Holds a buffer that can be modified.
 /**
  * The mutable_buffer class provides a safe representation of a buffer that can
  * be modified. It does not own the underlying data, and so is cheap to copy or
  * assign.
+ * 【可变缓冲区提供了一种安全的可以修改的缓冲区实现，并不拥有自己的私有对象，也很方便进行拷贝和赋值】
  *
  * @par Accessing Buffer Contents
  *
  * The contents of a buffer may be accessed using the @c data() and @c size()
- * member functions:
+ * member functions: 
+ * 【同样的，使用类似于stl中的data()和size()函数可以去获取缓冲区的值】
  *
  * @code asio::mutable_buffer b1 = ...;
  * std::size_t s1 = b1.size();
@@ -92,14 +95,14 @@ class const_buffer;
 class mutable_buffer
 {
 public:
-  /// Construct an empty buffer.
+  /// Construct an empty buffer. 【默认构造，数据指针扔到nullptr，大小扔到0】
   mutable_buffer() ASIO_NOEXCEPT
     : data_(0),
-      size_(0)
+      size_(0) 
   {
   }
 
-  /// Construct a buffer to represent a given memory range.
+  /// Construct a buffer to represent a given memory range. 【传入指针和长度的构造方法】
   mutable_buffer(void* data, std::size_t size) ASIO_NOEXCEPT
     : data_(data),
       size_(size)
@@ -108,7 +111,7 @@ public:
 
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
   mutable_buffer(void* data, std::size_t size,
-      asio::detail::function<void()> debug_check)
+      asio::detail::function<void()> debug_check)   //【看起来时复制构造，但由于data_是指针，要注意不要重复释放了】
     : data_(data),
       size_(size),
       debug_check_(debug_check)
@@ -121,7 +124,7 @@ public:
   }
 #endif // ASIO_ENABLE_BUFFER_DEBUGGING
 
-  /// Get a pointer to the beginning of the memory range.
+  /// Get a pointer to the beginning of the memory range. 【data()就是获取首地址指针】
   void* data() const ASIO_NOEXCEPT
   {
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
@@ -131,13 +134,13 @@ public:
     return data_;
   }
 
-  /// Get the size of the memory range.
+  /// Get the size of the memory range. 【返回数据长度】
   std::size_t size() const ASIO_NOEXCEPT
   {
     return size_;
   }
 
-  /// Move the start of the buffer by the specified number of bytes.
+  /// Move the start of the buffer by the specified number of bytes. 【向后移动指针位置】
   mutable_buffer& operator+=(std::size_t n) ASIO_NOEXCEPT
   {
     std::size_t offset = n < size_ ? n : size_;
@@ -147,11 +150,11 @@ public:
   }
 
 private:
-  void* data_;
-  std::size_t size_;
+  void* data_;  //【void*指针】
+  std::size_t size_; //【数据大小】
 
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
-  asio::detail::function<void()> debug_check_;
+  asio::detail::function<void()> debug_check_;  //【开启缓冲区调试时有的调试函数】
 #endif // ASIO_ENABLE_BUFFER_DEBUGGING
 };
 
@@ -209,6 +212,8 @@ public:
  * The const_buffer class provides a safe representation of a buffer that cannot
  * be modified. It does not own the underlying data, and so is cheap to copy or
  * assign.
+ * 【常缓冲区类提供了一种安全的不可修改的实现方法，也不持有任何私有成员】
+ * 
  *
  * @par Accessing Buffer Contents
  *
@@ -281,7 +286,7 @@ public:
     return size_;
   }
 
-  /// Move the start of the buffer by the specified number of bytes.
+  /// Move the start of the buffer by the specified number of bytes. 【只能向后移动指针首地址】
   const_buffer& operator+=(std::size_t n) ASIO_NOEXCEPT
   {
     std::size_t offset = n < size_ ? n : size_;
@@ -291,8 +296,8 @@ public:
   }
 
 private:
-  const void* data_;
-  std::size_t size_;
+  const void* data_;    //这个data相比之下是一个常量指针，不能修改data_中的值
+  std::size_t size_;    //长度
 
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
   asio::detail::function<void()> debug_check_;
@@ -383,29 +388,29 @@ private:
  */
 /*@{*/
 
-/// Get an iterator to the first element in a buffer sequence.
+/// Get an iterator to the first element in a buffer sequence. 【获取可变buffer中的第一个元素】
 template <typename MutableBuffer>
 inline const mutable_buffer* buffer_sequence_begin(const MutableBuffer& b,
     typename constraint<
       is_convertible<const MutableBuffer*, const mutable_buffer*>::value
-    >::type = 0) ASIO_NOEXCEPT
+    >::type = 0) ASIO_NOEXCEPT  //type_traits限定MutableBuffer是mutable_buffer*类型的
 {
-  return static_cast<const mutable_buffer*>(detail::addressof(b));
+  return static_cast<const mutable_buffer*>(detail::addressof(b));  //这样才能将地址指针转换成可变缓冲的类型
 }
 
-/// Get an iterator to the first element in a buffer sequence.
+/// Get an iterator to the first element in a buffer sequence. 【获取固定buffer序列中第一个元素】
 template <typename ConstBuffer>
 inline const const_buffer* buffer_sequence_begin(const ConstBuffer& b,
     typename constraint<
       is_convertible<const ConstBuffer*, const const_buffer*>::value
     >::type = 0) ASIO_NOEXCEPT
 {
-  return static_cast<const const_buffer*>(detail::addressof(b));
+  return static_cast<const const_buffer*>(detail::addressof(b));    //使用static_cast将地址转化成对应类型的指针
 }
 
 #if defined(ASIO_HAS_DECLTYPE) || defined(GENERATING_DOCUMENTATION)
 
-/// Get an iterator to the first element in a buffer sequence.
+/// Get an iterator to the first element in a buffer sequence. 【这个是啥，就是都不符合的】
 template <typename C>
 inline auto buffer_sequence_begin(C& c,
     typename constraint<
@@ -413,10 +418,10 @@ inline auto buffer_sequence_begin(C& c,
         && !is_convertible<const C*, const const_buffer*>::value
     >::type = 0) ASIO_NOEXCEPT -> decltype(c.begin())
 {
-  return c.begin();
+  return c.begin(); //【这大约是stl等等的吧】
 }
 
-/// Get an iterator to the first element in a buffer sequence.
+/// Get an iterator to the first element in a buffer sequence. 【和上面相比，限定了C是const的】
 template <typename C>
 inline auto buffer_sequence_begin(const C& c,
     typename constraint<
@@ -424,7 +429,7 @@ inline auto buffer_sequence_begin(const C& c,
         && !is_convertible<const C*, const const_buffer*>::value
     >::type = 0) ASIO_NOEXCEPT -> decltype(c.begin())
 {
-  return c.begin();
+  return c.begin(); //【这大约是stl等等的吧】
 }
 
 #else // defined(ASIO_HAS_DECLTYPE) || defined(GENERATING_DOCUMENTATION)
@@ -460,7 +465,7 @@ inline typename C::const_iterator buffer_sequence_begin(const C& c,
  */
 /*@{*/
 
-/// Get an iterator to one past the end element in a buffer sequence.
+/// Get an iterator to one past the end element in a buffer sequence. 【获取缓冲区序列的末尾[]】
 template <typename MutableBuffer>
 inline const mutable_buffer* buffer_sequence_end(const MutableBuffer& b,
     typename constraint<
@@ -532,32 +537,32 @@ inline typename C::const_iterator buffer_sequence_end(const C& c,
 
 namespace detail {
 
-// Tag types used to select appropriately optimised overloads.
+// Tag types used to select appropriately optimised overloads.【tag类型用来选择最合适的重载】
 struct one_buffer {};
 struct multiple_buffers {};
 
-// Helper trait to detect single buffers.
+// Helper trait to detect single buffers. 【用来选择单缓冲区的帮助trait】
 template <typename BufferSequence>
 struct buffer_sequence_cardinality :
   conditional<
-    is_same<BufferSequence, mutable_buffer>::value
+    is_same<BufferSequence, mutable_buffer>::value  //要是是可变缓冲
 #if !defined(ASIO_NO_DEPRECATED)
       || is_same<BufferSequence, mutable_buffers_1>::value
       || is_same<BufferSequence, const_buffers_1>::value
 #endif // !defined(ASIO_NO_DEPRECATED)
       || is_same<BufferSequence, const_buffer>::value,
-    one_buffer, multiple_buffers>::type {};
+    one_buffer, multiple_buffers>::type {}; //可变缓冲/固定缓冲=>单buffer， 其他的=>多buffer
 
 template <typename Iterator>
 inline std::size_t buffer_size(one_buffer,
-    Iterator begin, Iterator) ASIO_NOEXCEPT
+    Iterator begin, Iterator) ASIO_NOEXCEPT //缓冲区大小，类型就是上面的one_buffer，直接通过iterator返回对应指针的size_就好
 {
   return const_buffer(*begin).size();
 }
 
 template <typename Iterator>
 inline std::size_t buffer_size(multiple_buffers,
-    Iterator begin, Iterator end) ASIO_NOEXCEPT
+    Iterator begin, Iterator end) ASIO_NOEXCEPT //考虑多缓冲区序列，那么就得每个一个个的相加了
 {
   std::size_t total_buffer_size = 0;
 
@@ -597,7 +602,7 @@ inline std::size_t buffer_size(const BufferSequence& b) ASIO_NOEXCEPT
   return detail::buffer_size(
       detail::buffer_sequence_cardinality<BufferSequence>(),
       asio::buffer_sequence_begin(b),
-      asio::buffer_sequence_end(b));
+      asio::buffer_sequence_end(b));    //通过buffer_sequence_cardinality来确定是单缓冲还是缓冲序列，最后将其相加就好
 }
 
 #if !defined(ASIO_NO_DEPRECATED)
@@ -645,14 +650,15 @@ inline PointerToPodType buffer_cast(const const_buffer& b) ASIO_NOEXCEPT
 
 /// Create a new modifiable buffer that is offset from the start of another.
 /**
+ * 根据n这个偏移量创建一个新的可变buffer
  * @relates mutable_buffer
  */
 inline mutable_buffer operator+(const mutable_buffer& b,
     std::size_t n) ASIO_NOEXCEPT
 {
-  std::size_t offset = n < b.size() ? n : b.size();
-  char* new_data = static_cast<char*>(b.data()) + offset;
-  std::size_t new_size = b.size() - offset;
+  std::size_t offset = n < b.size() ? n : b.size(); //偏移量不能超过原来的buffr大小【clamp夹了】
+  char* new_data = static_cast<char*>(b.data()) + offset; //新的偏移量创建一个新的可变缓冲
+  std::size_t new_size = b.size() - offset; //记得将大小变小
   return mutable_buffer(new_data, new_size
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
       , b.get_debug_check()
@@ -660,7 +666,7 @@ inline mutable_buffer operator+(const mutable_buffer& b,
       );
 }
 
-/// Create a new modifiable buffer that is offset from the start of another.
+/// Create a new modifiable buffer that is offset from the start of another. 【调用上面的实现通用性】
 /**
  * @relates mutable_buffer
  */
@@ -670,7 +676,7 @@ inline mutable_buffer operator+(std::size_t n,
   return b + n;
 }
 
-/// Create a new non-modifiable buffer that is offset from the start of another.
+/// Create a new non-modifiable buffer that is offset from the start of another.【创建一个新的固定buffer】
 /**
  * @relates const_buffer
  */
@@ -678,16 +684,16 @@ inline const_buffer operator+(const const_buffer& b,
     std::size_t n) ASIO_NOEXCEPT
 {
   std::size_t offset = n < b.size() ? n : b.size();
-  const char* new_data = static_cast<const char*>(b.data()) + offset;
+  const char* new_data = static_cast<const char*>(b.data()) + offset; 
   std::size_t new_size = b.size() - offset;
-  return const_buffer(new_data, new_size
+  return const_buffer(new_data, new_size    //这里使用的是const_buffer
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
       , b.get_debug_check()
 #endif // ASIO_ENABLE_BUFFER_DEBUGGING
       );
 }
 
-/// Create a new non-modifiable buffer that is offset from the start of another.
+/// Create a new non-modifiable buffer that is offset from the start of another. 【+有两个实现】
 /**
  * @relates const_buffer
  */
@@ -701,7 +707,7 @@ inline const_buffer operator+(std::size_t n,
 namespace detail {
 
 template <typename Iterator>
-class buffer_debug_check
+class buffer_debug_check    //检查buffer的调试类
 {
 public:
   buffer_debug_check(Iterator iter)
@@ -748,7 +754,8 @@ private:
  *
  * The simplest use case involves reading or writing a single buffer of a
  * specified size:
- *
+ * 【最简单的buffer应用，就是send进去】
+ * 
  * @code sock.send(asio::buffer(data, size)); @endcode
  *
  * In the above example, the return value of asio::buffer meets the
@@ -775,7 +782,8 @@ private:
  * In all three cases above, the buffers created are exactly 128 bytes long.
  * Note that a vector is @e never automatically resized when creating or using
  * a buffer. The buffer size is determined using the vector's <tt>size()</tt>
- * member function, and not its capacity.
+ * member function, and not its capacity.   
+ * 【buffer的大小使用的是 vector.size()而非capacity()】
  *
  * @par Accessing Buffer Contents
  *
@@ -821,16 +829,19 @@ private:
  * is the responsibility of the application to ensure the memory region remains
  * valid until it is no longer required for an I/O operation. When the memory
  * is no longer available, the buffer is said to have been invalidated.
+ * 【buffer对象并不持有它指向的内存的所有权，app应用有责任保证在I/O结束前保证内存空间的可用性。因为当分配内存不可用时，buffer也会随之非法】
  *
  * For the asio::buffer overloads that accept an argument of type
  * std::vector, the buffer objects returned are invalidated by any vector
  * operation that also invalidates all references, pointers and iterators
  * referring to the elements in the sequence (C++ Std, 23.2.4)
+ * 【对于buffer类，重载了可以接受vector作为参数，对vector可能会导致不可用的操作也会导致buffer的不可用】
  *
  * For the asio::buffer overloads that accept an argument of type
  * std::basic_string, the buffer objects returned are invalidated according to
  * the rules defined for invalidation of references, pointers and iterators
  * referring to elements of the sequence (C++ Std, 21.3).
+ * 【buffer重载了使用basic_string作为参数，会导致string不可用的操作也会导致buffer不可用】
  *
  * @par Buffer Arithmetic
  *
@@ -907,7 +918,7 @@ private:
  * @returns <tt>mutable_buffer(b)</tt>.
  */
 ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
-    const mutable_buffer& b) ASIO_NOEXCEPT
+    const mutable_buffer& b) ASIO_NOEXCEPT  //从一个可变缓冲创建缓冲类
 {
   return ASIO_MUTABLE_BUFFER(b);
 }
@@ -921,7 +932,7 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
  */
 ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
     const mutable_buffer& b,
-    std::size_t max_size_in_bytes) ASIO_NOEXCEPT
+    std::size_t max_size_in_bytes) ASIO_NOEXCEPT    // 【限定了最大缓冲区大小的拷贝构造】
 {
   return ASIO_MUTABLE_BUFFER(
       mutable_buffer(b.data(),
@@ -933,18 +944,20 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
         ));
 }
 
-/// Create a new non-modifiable buffer from an existing buffer.
+/// Create a new non-modifiable buffer from an existing buffer. 
 /**
+* 【拷贝构造 固定缓冲区】
  * @returns <tt>const_buffer(b)</tt>.
  */
 ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
     const const_buffer& b) ASIO_NOEXCEPT
 {
-  return ASIO_CONST_BUFFER(b);
+  return ASIO_CONST_BUFFER(b);  
 }
 
 /// Create a new non-modifiable buffer from an existing buffer.
 /**
+* 【拷贝构造，有最大长度限制，固定缓冲区】
  * @returns A const_buffer value equivalent to:
  * @code const_buffer(
  *     b.data(),
@@ -965,6 +978,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /// Create a new modifiable buffer that represents the given memory range.
 /**
+* 【传入指针地址，长度的构造函数。 可变缓冲】
  * @returns <tt>mutable_buffer(data, size_in_bytes)</tt>.
  */
 ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
@@ -975,6 +989,7 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
 
 /// Create a new non-modifiable buffer that represents the given memory range.
 /**
+* 【传入指针地址，长度。 固定缓冲】
  * @returns <tt>const_buffer(data, size_in_bytes)</tt>.
  */
 ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
@@ -985,6 +1000,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /// Create a new modifiable buffer that represents the given POD array.
 /**
+* 【<>传入类型和数量，自动计算长度】【可变缓冲】
  * @returns A mutable_buffer value equivalent to:
  * @code mutable_buffer(
  *     static_cast<void*>(data),
@@ -999,6 +1015,7 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
  
 /// Create a new modifiable buffer that represents the given POD array.
 /**
+ * 【<>传入类型和数量，自动计算长度(有最大长度限制)】【可变缓冲】
  * @returns A mutable_buffer value equivalent to:
  * @code mutable_buffer(
  *     static_cast<void*>(data),
@@ -1016,6 +1033,7 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
  
 /// Create a new non-modifiable buffer that represents the given POD array.
 /**
+* 【<>传入类型和数量】
  * @returns A const_buffer value equivalent to:
  * @code const_buffer(
  *     static_cast<const void*>(data),
@@ -1030,6 +1048,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /// Create a new non-modifiable buffer that represents the given POD array.
 /**
+* 【<>传入类型和数量】
  * @returns A const_buffer value equivalent to:
  * @code const_buffer(
  *     static_cast<const void*>(data),
@@ -1119,6 +1138,7 @@ buffer(boost::array<PodType, N>& data,
 
 /// Create a new modifiable buffer that represents the given POD array.
 /**
+* 【<>传入boost::array的方法】
  * @returns A mutable_buffer value equivalent to:
  * @code mutable_buffer(
  *     data.data(),
@@ -1134,6 +1154,7 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
 
 /// Create a new modifiable buffer that represents the given POD array.
 /**
+* 【<>()传入boost::array且有最大限制】
  * @returns A mutable_buffer value equivalent to:
  * @code mutable_buffer(
  *     data.data(),
@@ -1151,6 +1172,7 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
 
 /// Create a new non-modifiable buffer that represents the given POD array.
 /**
+* 【<>()传入boost::array】
  * @returns A const_buffer value equivalent to:
  * @code const_buffer(
  *     data.data(),
@@ -1165,6 +1187,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /// Create a new non-modifiable buffer that represents the given POD array.
 /**
+* 【<>()传入boost:array且有最大限制】
  * @returns A const_buffer value equivalent to:
  * @code const_buffer(
  *     data.data(),
@@ -1184,6 +1207,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /// Create a new non-modifiable buffer that represents the given POD array.
 /**
+* 【<>()boost::array】【固定缓冲】
  * @returns A const_buffer value equivalent to:
  * @code const_buffer(
  *     data.data(),
@@ -1198,6 +1222,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /// Create a new non-modifiable buffer that represents the given POD array.
 /**
+* 【<>()传入boost::array】【固定缓冲】
  * @returns A const_buffer value equivalent to:
  * @code const_buffer(
  *     data.data(),
@@ -1217,6 +1242,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /// Create a new modifiable buffer that represents the given POD array.
 /**
+* 【<>()标准std::array】
  * @returns A mutable_buffer value equivalent to:
  * @code mutable_buffer(
  *     data.data(),
@@ -1226,7 +1252,7 @@ template <typename PodType, std::size_t N>
 ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
     std::array<PodType, N>& data) ASIO_NOEXCEPT
 {
-  return ASIO_MUTABLE_BUFFER(data.data(), data.size() * sizeof(PodType));
+  return ASIO_MUTABLE_BUFFER(data.data(), data.size() * sizeof(PodType));   //
 }
 
 /// Create a new modifiable buffer that represents the given POD array.
@@ -1322,10 +1348,10 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
  */
 template <typename PodType, typename Allocator>
 ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
-    std::vector<PodType, Allocator>& data) ASIO_NOEXCEPT
+    std::vector<PodType, Allocator>& data) ASIO_NOEXCEPT        //【标准std::vector<PodType, Allocator>】
 {
   return ASIO_MUTABLE_BUFFER(
-      data.size() ? &data[0] : 0, data.size() * sizeof(PodType)
+      data.size() ? &data[0] : 0, data.size() * sizeof(PodType) //这个要考虑是不是为空，空的要扔到nullptr那儿去
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
       , detail::buffer_debug_check<
           typename std::vector<PodType, Allocator>::iterator
@@ -1347,7 +1373,7 @@ ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
 template <typename PodType, typename Allocator>
 ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
     std::vector<PodType, Allocator>& data,
-    std::size_t max_size_in_bytes) ASIO_NOEXCEPT
+    std::size_t max_size_in_bytes) ASIO_NOEXCEPT    //【标准vector，要考虑最大长度】
 {
   return ASIO_MUTABLE_BUFFER(data.size() ? &data[0] : 0,
       data.size() * sizeof(PodType) < max_size_in_bytes
@@ -1420,10 +1446,10 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
  */
 template <typename Elem, typename Traits, typename Allocator>
 ASIO_NODISCARD inline ASIO_MUTABLE_BUFFER buffer(
-    std::basic_string<Elem, Traits, Allocator>& data) ASIO_NOEXCEPT
+    std::basic_string<Elem, Traits, Allocator>& data) ASIO_NOEXCEPT         //【标准std::base_string<Elem, Traits, Allocator>】
 {
   return ASIO_MUTABLE_BUFFER(data.size() ? &data[0] : 0,
-      data.size() * sizeof(Elem)
+      data.size() * sizeof(Elem)    //大小还是sizeof(Elem)
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
       , detail::buffer_debug_check<
           typename std::basic_string<Elem, Traits, Allocator>::iterator
@@ -1514,7 +1540,7 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
  */
 template <typename Elem, typename Traits>
 ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
-    basic_string_view<Elem, Traits> data) ASIO_NOEXCEPT
+    basic_string_view<Elem, Traits> data) ASIO_NOEXCEPT                               // 【basic_string_view<Elem, Traits>】
 {
   return ASIO_CONST_BUFFER(data.size() ? &data[0] : 0,
       data.size() * sizeof(Elem)
@@ -1554,8 +1580,12 @@ ASIO_NODISCARD inline ASIO_CONST_BUFFER buffer(
 
 /*@}*/
 
-/// Adapt a basic_string to the DynamicBuffer requirements.
+
+
+
+/// Adapt a basic_string to the DynamicBuffer requirements. ============================================================================================================================
 /**
+* 【将basic_string 转换到 DynamicBuffer的要求(要求，Elem大小得为1字节)！！！(要求，Elem大小得为1字节)！！！】
  * Requires that <tt>sizeof(Elem) == 1</tt>.
  */
 template <typename Elem, typename Traits, typename Allocator>
@@ -1563,11 +1593,11 @@ class dynamic_string_buffer
 {
 public:
   /// The type used to represent a sequence of constant buffers that refers to
-  /// the underlying memory.
+  /// the underlying memory. 【固定缓冲】
   typedef ASIO_CONST_BUFFER const_buffers_type;
 
   /// The type used to represent a sequence of mutable buffers that refers to
-  /// the underlying memory.
+  /// the underlying memory. 【可变缓冲】
   typedef ASIO_MUTABLE_BUFFER mutable_buffers_type;
 
   /// Construct a dynamic buffer from a string.
@@ -1576,6 +1606,7 @@ public:
    * The object stores a reference to the string and the user is responsible
    * for ensuring that the string object remains valid while the
    * dynamic_string_buffer object, and copies of the object, are in use.
+   * 【用户有责任保证在使用dynamic_string_buffer时空间不被释放】
    *
    * @b DynamicBuffer_v1: Any existing data in the string is treated as the
    * dynamic buffer's input sequence.
@@ -1585,15 +1616,15 @@ public:
   explicit dynamic_string_buffer(std::basic_string<Elem, Traits, Allocator>& s,
       std::size_t maximum_size =
         (std::numeric_limits<std::size_t>::max)()) ASIO_NOEXCEPT
-    : string_(s),
+    : string_(s),                                   //【初始化内部string_】
 #if !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
-      size_((std::numeric_limits<std::size_t>::max)()),
+      size_((std::numeric_limits<std::size_t>::max)()),     // 【如果允许可变buffer_v1，size_默认是最大u64】
 #endif // !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
       max_size_(maximum_size)
   {
   }
 
-  /// @b DynamicBuffer_v2: Copy construct a dynamic buffer.
+  /// @b DynamicBuffer_v2: Copy construct a dynamic buffer. //【拷贝构造】
   dynamic_string_buffer(const dynamic_string_buffer& other) ASIO_NOEXCEPT
     : string_(other.string_),
 #if !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
@@ -1604,7 +1635,7 @@ public:
   }
 
 #if defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
-  /// Move construct a dynamic buffer.
+  /// Move construct a dynamic buffer. 【移动构造】
   dynamic_string_buffer(dynamic_string_buffer&& other) ASIO_NOEXCEPT
     : string_(other.string_),
 #if !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
@@ -1615,8 +1646,8 @@ public:
   }
 #endif // defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
 
-  /// @b DynamicBuffer_v1: Get the size of the input sequence.
-  /// @b DynamicBuffer_v2: Get the current size of the underlying memory.
+  /// @b DynamicBuffer_v1: Get the size of the input sequence.  【获取输入序列的大小】
+  /// @b DynamicBuffer_v2: Get the current size of the underlying memory. 【获得当前下划线内存的当前大小】
   /**
    * @returns @b DynamicBuffer_v1 The current size of the input sequence.
    * @b DynamicBuffer_v2: The current size of the underlying string if less than
@@ -1626,7 +1657,7 @@ public:
   {
 #if !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
     if (size_ != (std::numeric_limits<std::size_t>::max)())
-      return size_;
+      return size_; //【v2版本返回当前下划线size_】
 #endif // !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
     return (std::min)(string_.size(), max_size());
   }
@@ -1643,6 +1674,7 @@ public:
   /// Get the maximum size that the buffer may grow to without triggering
   /// reallocation.
   /**
+  * 【当前的capacity应该取较小值()】
    * @returns The current capacity of the underlying string if less than
    * max_size(). Otherwise returns max_size().
    */
@@ -1671,6 +1703,7 @@ public:
   /// @b DynamicBuffer_v2: Get a sequence of buffers that represents the
   /// underlying memory.
   /**
+  * 【返回一个可变缓冲区，参数是偏移量和长度【讲道理，这还要我们自己传缓冲区初始位置和长度的吗】】
    * @param pos Position of the first byte to represent in the buffer sequence
    *
    * @param n The number of bytes to return in the buffer sequence. If the
@@ -1764,6 +1797,7 @@ public:
   /// @b DynamicBuffer_v2: Grow the underlying memory by the specified number of
   /// bytes.
   /**
+  *  【v2版本，将_版本的内存扩大b字节】
    * Resizes the string to accommodate an additional @c n bytes at the end.
    *
    * @throws std::length_error If <tt>size() + n > max_size()</tt>.
@@ -1772,16 +1806,17 @@ public:
   {
     if (size() > max_size() || max_size() - size() < n)
     {
-      std::length_error ex("dynamic_string_buffer too long");
+      std::length_error ex("dynamic_string_buffer too long");   //不能超过最大长度
       asio::detail::throw_exception(ex);
     }
 
-    string_.resize(size() + n);
+    string_.resize(size() + n); //改变大小
   }
 
   /// @b DynamicBuffer_v2: Shrink the underlying memory by the specified number
   /// of bytes.
   /**
+  * 【v2：减少n字节】
    * Erases @c n bytes from the end of the string by resizing the basic_string
    * object. If @c n is greater than the current size of the string, the string
    * is emptied.
@@ -1814,19 +1849,22 @@ public:
       return;
     }
 #endif // !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
-    string_.erase(0, n);
+    string_.erase(0, n); //【消费n字节(说白了就是从头开始删)】
   }
 
 private:
-  std::basic_string<Elem, Traits, Allocator>& string_;
+  std::basic_string<Elem, Traits, Allocator>& string_;                  // 【下划线的私有对象引用 string_】
 #if !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
-  std::size_t size_;
-#endif // !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
-  const std::size_t max_size_;
+  std::size_t size_;                                                    // 【大小】
+#endif // !defined(ASIO_NO_DYNAMIC_BUFFER_V1)   
+  const std::size_t max_size_;                                          // 【最大空间】
 };
 
-/// Adapt a vector to the DynamicBuffer requirements.
+
+
+/// Adapt a vector to the DynamicBuffer requirements.===============================================================================================================================
 /**
+* 【将vector转换成动态缓冲(要求，Elem大小得为1字节)！！！】
  * Requires that <tt>sizeof(Elem) == 1</tt>.
  */
 template <typename Elem, typename Allocator>
@@ -2091,7 +2129,7 @@ public:
   }
 
 private:
-  std::vector<Elem, Allocator>& vector_;
+  std::vector<Elem, Allocator>& vector_;    // 【这里面的下划线是一个基本vector引用[！！！这里buffer并不保有vector的所有权]】
 #if !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
   std::size_t size_;
 #endif // !defined(ASIO_NO_DYNAMIC_BUFFER_V1)
@@ -2105,6 +2143,8 @@ private:
  */
 /*@{*/
 
+//////////////////////////////////////==============函数====================////////////////////////////////////////////////////
+
 /// Create a new dynamic buffer that represents the given string.
 /**
  * @returns <tt>dynamic_string_buffer<Elem, Traits, Allocator>(data)</tt>.
@@ -2112,7 +2152,7 @@ private:
 template <typename Elem, typename Traits, typename Allocator>
 ASIO_NODISCARD inline
 dynamic_string_buffer<Elem, Traits, Allocator> dynamic_buffer(
-    std::basic_string<Elem, Traits, Allocator>& data) ASIO_NOEXCEPT
+    std::basic_string<Elem, Traits, Allocator>& data) ASIO_NOEXCEPT     // 【返回一个动态string缓冲】
 {
   return dynamic_string_buffer<Elem, Traits, Allocator>(data);
 }
@@ -2126,7 +2166,7 @@ template <typename Elem, typename Traits, typename Allocator>
 ASIO_NODISCARD inline
 dynamic_string_buffer<Elem, Traits, Allocator> dynamic_buffer(
     std::basic_string<Elem, Traits, Allocator>& data,
-    std::size_t max_size) ASIO_NOEXCEPT
+    std::size_t max_size) ASIO_NOEXCEPT                             // 【和上一个相比有最大长度的限制】
 {
   return dynamic_string_buffer<Elem, Traits, Allocator>(data, max_size);
 }
@@ -2138,7 +2178,7 @@ dynamic_string_buffer<Elem, Traits, Allocator> dynamic_buffer(
 template <typename Elem, typename Allocator>
 ASIO_NODISCARD inline
 dynamic_vector_buffer<Elem, Allocator> dynamic_buffer(
-    std::vector<Elem, Allocator>& data) ASIO_NOEXCEPT
+    std::vector<Elem, Allocator>& data) ASIO_NOEXCEPT               //【返回一个动态vector缓冲】
 {
   return dynamic_vector_buffer<Elem, Allocator>(data);
 }
@@ -2151,7 +2191,7 @@ template <typename Elem, typename Allocator>
 ASIO_NODISCARD inline
 dynamic_vector_buffer<Elem, Allocator> dynamic_buffer(
     std::vector<Elem, Allocator>& data,
-    std::size_t max_size) ASIO_NOEXCEPT
+    std::size_t max_size) ASIO_NOEXCEPT                            // 【一样，有最大长度限制】
 {
   return dynamic_vector_buffer<Elem, Allocator>(data, max_size);
 }
@@ -2162,12 +2202,13 @@ dynamic_vector_buffer<Elem, Allocator> dynamic_buffer(
  *
  * @brief The asio::buffer_copy function is used to copy bytes from a
  * source buffer (or buffer sequence) to a target buffer (or buffer sequence).
- *
+ * 【asio::buffer_copy是用来将数据从源缓冲拷贝到目的缓冲区】
+ * 
  * The @c buffer_copy function is available in two forms:
  *
- * @li A 2-argument form: @c buffer_copy(target, source)
+ * @li A 2-argument form: @c buffer_copy(target, source)    【两个参数的实现】
  *
- * @li A 3-argument form: @c buffer_copy(target, source, max_bytes_to_copy)
+ * @li A 3-argument form: @c buffer_copy(target, source, max_bytes_to_copy)     【三个参数的实现[有最大长度的限制]】
  *
  * Both forms return the number of bytes actually copied. The number of bytes
  * copied is the lesser of:
@@ -2189,14 +2230,14 @@ dynamic_vector_buffer<Elem, Allocator> dynamic_buffer(
 namespace detail {
 
 inline std::size_t buffer_copy_1(const mutable_buffer& target,
-    const const_buffer& source)
+    const const_buffer& source) //【目的缓冲区得是一个可变缓冲[毕竟固定缓冲用的是一个常量指针]】
 {
   using namespace std; // For memcpy.
   std::size_t target_size = target.size();
   std::size_t source_size = source.size();
   std::size_t n = target_size < source_size ? target_size : source_size;
   if (n > 0)
-    memcpy(target.data(), source.data(), n);
+    memcpy(target.data(), source.data(), n);    //【简单的使用memcpy】
   return n;
 }
 
@@ -2205,7 +2246,7 @@ inline std::size_t buffer_copy(one_buffer, one_buffer,
     TargetIterator target_begin, TargetIterator,
     SourceIterator source_begin, SourceIterator) ASIO_NOEXCEPT
 {
-  return (buffer_copy_1)(*target_begin, *source_begin);
+  return (buffer_copy_1)(*target_begin, *source_begin); //传迭代器也一样
 }
 
 template <typename TargetIterator, typename SourceIterator>
@@ -2215,34 +2256,34 @@ inline std::size_t buffer_copy(one_buffer, one_buffer,
     std::size_t max_bytes_to_copy) ASIO_NOEXCEPT
 {
   return (buffer_copy_1)(*target_begin,
-      asio::buffer(*source_begin, max_bytes_to_copy));
+      asio::buffer(*source_begin, max_bytes_to_copy));  //传迭代器的有最大长度限制的也差不多[只不过先创建一个缓冲区而已]
 }
 
 template <typename TargetIterator, typename SourceIterator>
-std::size_t buffer_copy(one_buffer, multiple_buffers,
+std::size_t buffer_copy(one_buffer, multiple_buffers,       //多缓冲区拷贝到单缓冲区
     TargetIterator target_begin, TargetIterator,
     SourceIterator source_begin, SourceIterator source_end,
     std::size_t max_bytes_to_copy
       = (std::numeric_limits<std::size_t>::max)()) ASIO_NOEXCEPT
 {
-  std::size_t total_bytes_copied = 0;
-  SourceIterator source_iter = source_begin;
+  std::size_t total_bytes_copied = 0;   //已经拷贝完成的字节数
+  SourceIterator source_iter = source_begin;    //源迭代器
 
   for (mutable_buffer target_buffer(
-        asio::buffer(*target_begin, max_bytes_to_copy));
+        asio::buffer(*target_begin, max_bytes_to_copy));    //对于这整个循环，只有一个目的buffer【顺便有最大长度，到了就结束】
       target_buffer.size() && source_iter != source_end; ++source_iter)
   {
-    const_buffer source_buffer(*source_iter);
-    std::size_t bytes_copied = (buffer_copy_1)(target_buffer, source_buffer);
+    const_buffer source_buffer(*source_iter);   //拿出源buffer组中的一个
+    std::size_t bytes_copied = (buffer_copy_1)(target_buffer, source_buffer);   //拷贝
     total_bytes_copied += bytes_copied;
     target_buffer += bytes_copied;
   }
 
-  return total_bytes_copied;
+  return total_bytes_copied;    //返回拷贝的长度
 }
 
 template <typename TargetIterator, typename SourceIterator>
-std::size_t buffer_copy(multiple_buffers, one_buffer,
+std::size_t buffer_copy(multiple_buffers, one_buffer,       //【从一个buffer拷贝到多个buffer中】
     TargetIterator target_begin, TargetIterator target_end,
     SourceIterator source_begin, SourceIterator,
     std::size_t max_bytes_to_copy
@@ -2267,7 +2308,7 @@ std::size_t buffer_copy(multiple_buffers, one_buffer,
 template <typename TargetIterator, typename SourceIterator>
 std::size_t buffer_copy(multiple_buffers, multiple_buffers,
     TargetIterator target_begin, TargetIterator target_end,
-    SourceIterator source_begin, SourceIterator source_end) ASIO_NOEXCEPT
+    SourceIterator source_begin, SourceIterator source_end) ASIO_NOEXCEPT   //多个缓冲区拷贝到多个缓冲区
 {
   std::size_t total_bytes_copied = 0;
 
@@ -2312,7 +2353,7 @@ template <typename TargetIterator, typename SourceIterator>
 std::size_t buffer_copy(multiple_buffers, multiple_buffers,
     TargetIterator target_begin, TargetIterator target_end,
     SourceIterator source_begin, SourceIterator source_end,
-    std::size_t max_bytes_to_copy) ASIO_NOEXCEPT
+    std::size_t max_bytes_to_copy) ASIO_NOEXCEPT            //多个缓冲区拷贝到多个缓冲区【有最大长度】
 {
   std::size_t total_bytes_copied = 0;
 
@@ -2358,6 +2399,8 @@ std::size_t buffer_copy(multiple_buffers, multiple_buffers,
 
 } // namespace detail
 
+
+////////////////////////////////////////====================  ===========================/////////////////////////////////////////////////////////////
 /// Copies bytes from a source buffer sequence to a target buffer sequence.
 /**
  * @param target A modifiable buffer sequence representing the memory regions to
@@ -2379,11 +2422,11 @@ std::size_t buffer_copy(multiple_buffers, multiple_buffers,
  */
 template <typename MutableBufferSequence, typename ConstBufferSequence>
 inline std::size_t buffer_copy(const MutableBufferSequence& target,
-    const ConstBufferSequence& source) ASIO_NOEXCEPT
+    const ConstBufferSequence& source) ASIO_NOEXCEPT                //【从一个缓冲区序列啊拷贝到另一个缓冲区序列】
 {
   return detail::buffer_copy(
-      detail::buffer_sequence_cardinality<MutableBufferSequence>(),
-      detail::buffer_sequence_cardinality<ConstBufferSequence>(),
+      detail::buffer_sequence_cardinality<MutableBufferSequence>(),     //【1.源缓冲区序列】
+      detail::buffer_sequence_cardinality<ConstBufferSequence>(),       //【2.目的缓冲区序列】
       asio::buffer_sequence_begin(target),
       asio::buffer_sequence_end(target),
       asio::buffer_sequence_begin(source),
@@ -2425,13 +2468,14 @@ inline std::size_t buffer_copy(const MutableBufferSequence& target,
       asio::buffer_sequence_begin(target),
       asio::buffer_sequence_end(target),
       asio::buffer_sequence_begin(source),
-      asio::buffer_sequence_end(source), max_bytes_to_copy);
+      asio::buffer_sequence_end(source), max_bytes_to_copy);    //【和上面相比多了长度的限制】
 }
 
 /*@}*/
 
 } // namespace asio
 
+/////////////////////////////////////================调用自己定义的type_traits的结构体===================///////////////////////////////////////////////////////////
 #include "asio/detail/pop_options.hpp"
 #include "asio/detail/is_buffer_sequence.hpp"
 #include "asio/detail/push_options.hpp"
@@ -2445,7 +2489,7 @@ struct is_mutable_buffer_sequence
 #if defined(GENERATING_DOCUMENTATION)
   : integral_constant<bool, automatically_determined>
 #else // defined(GENERATING_DOCUMENTATION)
-  : asio::detail::is_buffer_sequence<T, mutable_buffer>
+  : asio::detail::is_buffer_sequence<T, mutable_buffer>     
 #endif // defined(GENERATING_DOCUMENTATION)
 {
 };

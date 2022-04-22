@@ -150,7 +150,7 @@ struct defaulted_constraint
 };
 
 template <bool Condition, typename Type = int>
-struct constraint : enable_if<Condition, Type> {};
+struct constraint : enable_if<Condition, Type> {}; //重新定义了一个继承于enable_if的结构体
 
 } // namespace asio
 

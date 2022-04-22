@@ -1,4 +1,5 @@
 //
+// TAKO: 自定义type_trait，判断是不是buffer中定义的那几种缓冲区类型
 // detail/is_buffer_sequence.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -16,12 +17,13 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
-#include "asio/detail/type_traits.hpp"
+#include "asio/detail/type_traits.hpp"  //引入的type_trait
 
 #include "asio/detail/push_options.hpp"
 
 namespace asio {
 
+/// 这几个都定义在buffer.hpp中
 class mutable_buffer;
 class const_buffer;
 class mutable_registered_buffer;
@@ -29,7 +31,7 @@ class const_registered_buffer;
 
 namespace detail {
 
-struct buffer_sequence_memfns_base
+struct buffer_sequence_memfns_base  //内存序列的基本函数
 {
   void begin();
   void end();
@@ -45,26 +47,28 @@ struct buffer_sequence_memfns_base
 };
 
 template <typename T>
-struct buffer_sequence_memfns_derived
+struct buffer_sequence_memfns_derived   //继承于函数接口和T
   : T, buffer_sequence_memfns_base
 {
 };
 
 template <typename T, T>
-struct buffer_sequence_memfns_check
+struct buffer_sequence_memfns_check  //空结构体，大概率是做比较的
 {
 };
 
 #if defined(ASIO_HAS_DECLTYPE)
 
 template <typename>
-char buffer_sequence_begin_helper(...);
+char buffer_sequence_begin_helper(...); //最外部模板函数
 
+// 【不得不提这种傻逼的写法，其本质是using array_ref = char(&)[2];  array_ref f(...)】【这个函数指针最后的返回值是char[2]】
 template <typename T>
 char (&buffer_sequence_begin_helper(T* t,
     typename enable_if<!is_same<
       decltype(asio::buffer_sequence_begin(*t)),
-        void>::value>::type*))[2];
+        void>::value>::type*))[2];  //保证返回的是buffer而非buffer里面的数据[而第二个参数因为用enable_if，那么只要特化出来，就是void*]
+
 
 #else // defined(ASIO_HAS_DECLTYPE)
 
@@ -75,7 +79,7 @@ template <typename T>
 char buffer_sequence_begin_helper(T* t,
     buffer_sequence_memfns_check<
       void (buffer_sequence_memfns_base::*)(),
-      &buffer_sequence_memfns_derived<T>::begin>*);
+      &buffer_sequence_memfns_derived<T>::begin>*); //这种要是没有decltype时，那么就用这种取巧的方法
 
 #endif // defined(ASIO_HAS_DECLTYPE)
 
