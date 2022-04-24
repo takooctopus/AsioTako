@@ -1,4 +1,5 @@
 //
+// TAKO: WIN下面的静态互斥锁
 // detail/win_static_mutex.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -28,9 +29,9 @@ namespace detail {
 
 struct win_static_mutex
 {
-  typedef asio::detail::scoped_lock<win_static_mutex> scoped_lock;
+  typedef asio::detail::scoped_lock<win_static_mutex> scoped_lock;      //定义类型，使用scoped_lock来自动释放锁
 
-  // Initialise the mutex.
+  // Initialise the mutex. 
   ASIO_DECL void init();
 
   // Initialisation must be performed in a separate function to the "public"
@@ -50,8 +51,8 @@ struct win_static_mutex
     ::LeaveCriticalSection(&crit_section_);
   }
 
-  bool initialised_;
-  ::CRITICAL_SECTION crit_section_;
+  bool initialised_;                                            //是否已经初始化
+  ::CRITICAL_SECTION crit_section_;                             //临界区
 };
 
 #if defined(UNDER_CE)

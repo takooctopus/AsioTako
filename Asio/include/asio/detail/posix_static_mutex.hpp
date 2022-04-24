@@ -1,4 +1,5 @@
 //
+// TAKO: posix下的静态互斥量
 // detail/posix_static_mutex.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -20,7 +21,7 @@
 #if defined(ASIO_HAS_PTHREADS)
 
 #include <pthread.h>
-#include "asio/detail/scoped_lock.hpp"
+#include "asio/detail/scoped_lock.hpp"  //同样的，使用lock_guard来自动释放锁
 
 #include "asio/detail/push_options.hpp"
 
@@ -49,7 +50,7 @@ struct posix_static_mutex
     (void)::pthread_mutex_unlock(&mutex_); // Ignore EINVAL.
   }
 
-  ::pthread_mutex_t mutex_;
+  ::pthread_mutex_t mutex_;     //pisix里面的互斥锁
 };
 
 #define ASIO_POSIX_STATIC_MUTEX_INIT { PTHREAD_MUTEX_INITIALIZER }

@@ -1,4 +1,5 @@
 //
+// TAKO:标准库的静态互斥量
 // detail/std_static_mutex.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -65,8 +66,8 @@ public:
   }
 
 private:
-  friend class std_event;
-  std::mutex mutex_;
+  friend class std_event;           //友元类，自定的标准库事件类
+  std::mutex mutex_;                //标准库的互斥锁
 };
 
 #define ASIO_STD_STATIC_MUTEX_INIT 0
