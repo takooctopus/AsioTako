@@ -1,4 +1,5 @@
 //
+// TAKO:等待特性
 // wait_traits.hpp
 // ~~~~~~~~~~~~~~~
 //
@@ -28,7 +29,7 @@ struct wait_traits
    * @returns @c d.
    */
   static typename Clock::duration to_wait_duration(
-      const typename Clock::duration& d)
+      const typename Clock::duration& d)    //【传入一个时间段，传出去一样的】
   {
     return d;
   }
@@ -38,7 +39,7 @@ struct wait_traits
    * @returns @c d.
    */
   static typename Clock::duration to_wait_duration(
-      const typename Clock::time_point& t)
+      const typename Clock::time_point& t)  //将时间点转换成时间段 【基于现在的事件】
   {
     typename Clock::time_point now = Clock::now();
     if (now + (Clock::duration::max)() < t)

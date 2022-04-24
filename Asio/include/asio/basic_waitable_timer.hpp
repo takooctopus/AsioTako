@@ -1,4 +1,5 @@
 //
+// TAKO:基本的等待计时器
 // basic_waitable_timer.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -42,7 +43,7 @@ namespace asio {
 template <typename Clock,
     typename WaitTraits = asio::wait_traits<Clock>,
     typename Executor = any_io_executor>
-class basic_waitable_timer;
+class basic_waitable_timer;             //【先制声明】
 
 #endif // !defined(ASIO_BASIC_WAITABLE_TIMER_FWD_DECL)
 
@@ -50,16 +51,20 @@ class basic_waitable_timer;
 /**
  * The basic_waitable_timer class template provides the ability to perform a
  * blocking or asynchronous wait for a timer to expire.
+ * 【基本的等待计时器提供了 一种计时器等待[阻塞或者异步]的方式】
  *
  * A waitable timer is always in one of two states: "expired" or "not expired".
  * If the wait() or async_wait() function is called on an expired timer, the
  * wait operation will complete immediately.
+ * 【计时器一般只有两种状态 过期 未过期】【如果wait()或者async_wait()被用在了一个已过期的计时器上，那么等待操作会立即停止】
  *
  * Most applications will use one of the asio::steady_timer,
  * asio::system_timer or asio::high_resolution_timer typedefs.
+ * 【大部分的应用会使用稳定计时器、系统计时器、或高精度计时器】
  *
  * @note This waitable timer functionality is for use with the C++11 standard
  * library's @c &lt;chrono&gt; facility, or with the Boost.Chrono library.
+ * 【可选的可以是标准库的组件或者Boost的组件】
  *
  * @par Thread Safety
  * @e Distinct @e objects: Safe.@n
@@ -68,18 +73,18 @@ class basic_waitable_timer;
  * @par Examples
  * Performing a blocking wait (C++11):
  * @code
- * // Construct a timer without setting an expiry time.
+ * // Construct a timer without setting an expiry time. 【创建一个定时器，不带过期时间】
  * asio::steady_timer timer(my_context);
  *
- * // Set an expiry time relative to now.
+ * // Set an expiry time relative to now. 【设定其过期时间，基于自己】
  * timer.expires_after(std::chrono::seconds(5));
  *
- * // Wait for the timer to expire.
+ * // Wait for the timer to expire.【阻塞等待到计时器过期】
  * timer.wait();
  * @endcode
  *
  * @par 
- * Performing an asynchronous wait (C++11):
+ * Performing an asynchronous wait (C++11): 【异步等待】
  * @code
  * void handler(const asio::error_code& error)
  * {
@@ -91,12 +96,12 @@ class basic_waitable_timer;
  *
  * ...
  *
- * // Construct a timer with an absolute expiry time.
+ * // Construct a timer with an absolute expiry time. 【构建一个定时器，其有着绝对过期时间】
  * asio::steady_timer timer(my_context,
  *     std::chrono::steady_clock::now() + std::chrono::seconds(60));
  *
- * // Start an asynchronous wait.
- * timer.async_wait(handler);
+ * // Start an asynchronous wait. 【启动一次异步等待】
+ * timer.async_wait(handler);   //【到期调用句柄】
  * @endcode
  *
  * @par Changing an active waitable timer's expiry time
@@ -104,19 +109,21 @@ class basic_waitable_timer;
  * Changing the expiry time of a timer while there are pending asynchronous
  * waits causes those wait operations to be cancelled. To ensure that the action
  * associated with the timer is performed only once, use something like this:
+ * 【改变一个定时器的过期时间，[如果其有基于它的异步等待]将导致操作被取消】
+ * 【为了确保与这个定时器相关的操作只弄1次，使用下面的代码】
  * used:
  *
  * @code
  * void on_some_event()
  * {
- *   if (my_timer.expires_after(seconds(5)) > 0)
+ *   if (my_timer.expires_after(seconds(5)) > 0)    //要是5秒之后才过期
  *   {
  *     // We managed to cancel the timer. Start new asynchronous wait.
- *     my_timer.async_wait(on_timeout);
+ *     my_timer.async_wait(on_timeout); //可以新开一个异步等待
  *   }
  *   else
  *   {
- *     // Too late, timer has already expired!
+ *     // Too late, timer has already expired!  //太晚啦，已经过期啦
  *   }
  * }
  *
@@ -134,6 +141,9 @@ class basic_waitable_timer;
  * asynchronous waits that were cancelled. If it returns 0 then you were too
  * late and the wait handler has already been executed, or will soon be
  * executed. If it returns 1 then the wait handler was successfully cancelled.
+ * 【expires_after会取消所有的待办异步等待，并返回取消的数量】
+ * 【如果返回值为0，那么太晚啦，上面已经被执行啦，或者将要执行】
+ * 【如果返回值为1，那么等待句柄被成功取消】
  *
  * @li If a wait handler is cancelled, the asio::error_code passed to
  * it contains the value asio::error::operation_aborted.
@@ -142,27 +152,27 @@ template <typename Clock, typename WaitTraits, typename Executor>
 class basic_waitable_timer
 {
 public:
-  /// The type of the executor associated with the object.
+  /// The type of the executor associated with the object. 【传进来的Executor，应该是执行器吧】
   typedef Executor executor_type;
 
-  /// Rebinds the timer type to another executor.
+  /// Rebinds the timer type to another executor.【将timer绑定到另外一个执行器上】
   template <typename Executor1>
   struct rebind_executor
   {
-    /// The timer type when rebound to the specified executor.
+    /// The timer type when rebound to the specified executor.【重新定义一个基本等待定时器】
     typedef basic_waitable_timer<Clock, WaitTraits, Executor1> other;
   };
 
-  /// The clock type.
+  /// The clock type. 【时钟类型】
   typedef Clock clock_type;
 
-  /// The duration type of the clock.
+  /// The duration type of the clock. 【时间段类型】
   typedef typename clock_type::duration duration;
 
-  /// The time point type of the clock.
+  /// The time point type of the clock. 【时间点类型】
   typedef typename clock_type::time_point time_point;
 
-  /// The wait traits type.
+  /// The wait traits type. 【等待特质类型】
   typedef WaitTraits traits_type;
 
   /// Constructor.
@@ -782,19 +792,21 @@ private:
   basic_waitable_timer& operator=(
       const basic_waitable_timer&) ASIO_DELETED;
 
+  /// =============================================================================================================================================================S
+  // 初始化异步等待类[是下面的私有类]
   class initiate_async_wait
   {
   public:
-    typedef Executor executor_type;
+    typedef Executor executor_type; //执行器
 
     explicit initiate_async_wait(basic_waitable_timer* self)
-      : self_(self)
+      : self_(self) //初始化传入计时器
     {
     }
 
     executor_type get_executor() const ASIO_NOEXCEPT
     {
-      return self_->get_executor();
+      return self_->get_executor(); //获得关联计时器的执行器
     }
 
     template <typename WaitHandler>
@@ -802,22 +814,23 @@ private:
     {
       // If you get an error on the following line it means that your handler
       // does not meet the documented type requirements for a WaitHandler.
+      // 【等待句柄的类型检查器】【反正检查过了就不会报错】
       ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
 
       detail::non_const_lvalue<WaitHandler> handler2(handler);
       self_->impl_.get_service().async_wait(
           self_->impl_.get_implementation(),
-          handler2.value, self_->impl_.get_executor());
+          handler2.value, self_->impl_.get_executor()); 
     }
 
   private:
-    basic_waitable_timer* self_;
+    basic_waitable_timer* self_;    //上级self_【因为这个类是定义在basic_waitable_timer类中的子类，那么其父元素一定有一个基本的等待计时器】
   };
 
   detail::io_object_impl<
     detail::deadline_timer_service<
       detail::chrono_time_traits<Clock, WaitTraits> >,
-    executor_type > impl_;
+    executor_type > impl_;  //IO对象操作函数
 };
 
 } // namespace asio
