@@ -1,4 +1,5 @@
 //
+// TAKO:win下面任务段指针的函数
 // detail/impl/win_tss_ptr.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -33,18 +34,18 @@ DWORD win_tss_ptr_create()
 #if defined(UNDER_CE)
   const DWORD out_of_indexes = 0xFFFFFFFF;
 #else
-  const DWORD out_of_indexes = TLS_OUT_OF_INDEXES;
+  const DWORD out_of_indexes = TLS_OUT_OF_INDEXES;  //最大限制32位[u32]
 #endif
 
-  DWORD tss_key = ::TlsAlloc();
-  if (tss_key == out_of_indexes)
+  DWORD tss_key = ::TlsAlloc(); //要使用TLS，先调用TlsAlloc() 
+  if (tss_key == out_of_indexes)    //得在范围内，出了就是分配错了
   {
     DWORD last_error = ::GetLastError();
     asio::error_code ec(last_error,
         asio::error::get_system_category());
     asio::detail::throw_error(ec, "tss");
   }
-  return tss_key;
+  return tss_key;   //返回指示字段dword
 }
 
 } // namespace detail

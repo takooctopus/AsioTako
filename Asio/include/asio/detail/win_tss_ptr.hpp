@@ -1,4 +1,5 @@
 //
+// TAKO: win下面的任务段指针【主要是存一个线程本地存储的标志字段】
 // detail/win_tss_ptr.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -27,7 +28,7 @@
 namespace asio {
 namespace detail {
 
-// Helper function to create thread-specific storage.
+// Helper function to create thread-specific storage.【帮助类，用来创建任务段指针】
 ASIO_DECL DWORD win_tss_ptr_create();
 
 template <typename T>
@@ -56,12 +57,13 @@ public:
   // Set the value.
   void operator=(T* value)
   {
-    ::TlsSetValue(tss_key_, value);
+    ::TlsSetValue(tss_key_, value); //设置线程局部存储的值
   }
 
 private:
   // Thread-specific storage to allow unlocked access to determine whether a
   // thread is a member of the pool.
+  // 【线程局部存储，允许解锁的访问，看看线程是不是线程池里的一份子】
   DWORD tss_key_;
 };
 

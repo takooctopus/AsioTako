@@ -1,5 +1,5 @@
 //
-// TAKO: Task state segment 任务段指针
+// TAKO: Task state segment 任务段指针[主要是线程本地存储的Dword/u32]
 // detail/tss_ptr.hpp
 // ~~~~~~~~~~~~~~~~~~
 //

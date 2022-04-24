@@ -1,4 +1,5 @@
 //
+// TAKO:Posix下的线程本地存储指针
 // detail/posix_tss_ptr.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -61,7 +62,8 @@ public:
 
 private:
   // Thread-specific storage to allow unlocked access to determine whether a
-  // thread is a member of the pool.
+  // thread is a member of the pool. 
+  // 使用线程本地存储，用这个来确定线程是否在线程池中
   pthread_key_t tss_key_;
 };
 
