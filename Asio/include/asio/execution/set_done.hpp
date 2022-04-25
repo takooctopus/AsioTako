@@ -1,4 +1,5 @@
 //
+// TAKO:设置成结束
 // execution/set_done.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -74,8 +75,11 @@ using asio::enable_if;
 using asio::traits::set_done_free;
 using asio::traits::set_done_member;
 
-void set_done();
+///===================================================================
+void set_done();    //函数定义
 
+///===================================================================
+// 重载类型
 enum overload_type
 {
   call_member,
@@ -83,6 +87,8 @@ enum overload_type
   ill_formed
 };
 
+///===================================================================
+// 默认错误的特化
 template <typename R, typename = void, typename = void>
 struct call_traits
 {
@@ -91,6 +97,8 @@ struct call_traits
   typedef void result_type;
 };
 
+///===================================================================
+//
 template <typename R>
 struct call_traits<R,
   typename enable_if<
@@ -101,6 +109,8 @@ struct call_traits<R,
   ASIO_STATIC_CONSTEXPR(overload_type, overload = call_member);
 };
 
+///===================================================================
+//
 template <typename R>
 struct call_traits<R,
   typename enable_if<
@@ -114,6 +124,7 @@ struct call_traits<R,
   ASIO_STATIC_CONSTEXPR(overload_type, overload = call_free);
 };
 
+///===================================================================
 struct impl
 {
 #if defined(ASIO_HAS_MOVE)
@@ -129,6 +140,7 @@ struct impl
     return ASIO_MOVE_CAST(R)(r).set_done();
   }
 
+  ///===================================================================
   template <typename R>
   ASIO_CONSTEXPR typename enable_if<
     call_traits<R>::overload == call_free,
@@ -191,12 +203,14 @@ struct impl
 #endif // defined(ASIO_HAS_MOVE)
 };
 
+///===================================================================
 template <typename T = impl>
 struct static_instance
 {
   static const T instance;
 };
 
+///===================================================================
 template <typename T>
 const T static_instance<T>::instance = {};
 
@@ -205,26 +219,31 @@ namespace asio {
 namespace execution {
 namespace {
 
+///===================================================================
 static ASIO_CONSTEXPR const asio_execution_set_done_fn::impl&
-  set_done = asio_execution_set_done_fn::static_instance<>::instance;
+  set_done = asio_execution_set_done_fn::static_instance<>::instance;   //保管一个静态的对象
 
-} // namespace
+} // anomynous namespace
 
+///===================================================================
 template <typename R>
 struct can_set_done :
   integral_constant<bool,
     asio_execution_set_done_fn::call_traits<R>::overload !=
-      asio_execution_set_done_fn::ill_formed>
+      asio_execution_set_done_fn::ill_formed>   //使用integral_constant这个基类进行特化，扔一个类型出来
 {
 };
 
 #if defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
+///===================================================================
+// 用上面的模板进行变量定义
 template <typename R>
 constexpr bool can_set_done_v = can_set_done<R>::value;
 
 #endif // defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
+///===================================================================
 template <typename R>
 struct is_nothrow_set_done :
   integral_constant<bool,
@@ -234,6 +253,7 @@ struct is_nothrow_set_done :
 
 #if defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
+///===================================================================
 template <typename R>
 constexpr bool is_nothrow_set_done_v
   = is_nothrow_set_done<R>::value;

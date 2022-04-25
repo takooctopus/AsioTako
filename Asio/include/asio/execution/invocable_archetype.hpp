@@ -1,4 +1,5 @@
 //
+// TAKO: 可唤醒原型【保证一个result_type和一个()的重载】
 // execution/invocable_archetype.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -37,6 +38,7 @@ struct invocable_archetype
   || defined(GENERATING_DOCUMENTATION)
 
   /// Function call operator.
+  // 对（）的重载
   template <typename... Args>
   void operator()(ASIO_MOVE_ARG(Args)...)
   {

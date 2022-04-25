@@ -1,4 +1,5 @@
 //
+// TAKO: 执行释放
 // traits/execute_free.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -31,15 +32,21 @@
 namespace asio {
 namespace traits {
 
+///===================================================================
+//前置声明
 template <typename T, typename F, typename = void>
 struct execute_free_default;
 
+///===================================================================
+//前置声明
 template <typename T, typename F, typename = void>
 struct execute_free;
 
 } // namespace traits
 namespace detail {
 
+///===================================================================
+// 默认的，不可用，要抛异常
 struct no_execute_free
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = false);
@@ -48,11 +55,14 @@ struct no_execute_free
 
 #if defined(ASIO_HAS_DEDUCED_EXECUTE_FREE_TRAIT)
 
+///===================================================================
+//默认的特化，即<>第三个参数[默认下继承于上面的不可用]
 template <typename T, typename F, typename = void>
 struct execute_free_trait : no_execute_free
 {
 };
 
+///===================================================================
 template <typename T, typename F>
 struct execute_free_trait<T, F,
   typename void_type<
@@ -62,7 +72,7 @@ struct execute_free_trait<T, F,
   ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
 
   using result_type = decltype(
-    execute(declval<T>(), declval<F>()));
+    execute(declval<T>(), declval<F>()));   //看看最后执行双参的结果定义类型
 
   ASIO_STATIC_CONSTEXPR(bool, is_noexcept = noexcept(
     execute(declval<T>(), declval<F>())));
@@ -88,12 +98,14 @@ struct execute_free_trait :
 } // namespace detail
 namespace traits {
 
+///===================================================================
 template <typename T, typename F, typename>
 struct execute_free_default :
   detail::execute_free_trait<T, F>
 {
 };
 
+///===================================================================
 template <typename T, typename F, typename>
 struct execute_free :
   execute_free_default<T, F>

@@ -1,4 +1,5 @@
 //
+// TAKO：设置异常，自由设置
 // traits/set_error_free.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -40,6 +41,7 @@ struct set_error_free;
 } // namespace traits
 namespace detail {
 
+///===================================================================
 struct no_set_error_free
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = false);
@@ -48,11 +50,13 @@ struct no_set_error_free
 
 #if defined(ASIO_HAS_DEDUCED_SET_ERROR_FREE_TRAIT)
 
+///===================================================================
 template <typename T, typename E, typename = void>
 struct set_error_free_trait : no_set_error_free
 {
 };
 
+///===================================================================
 template <typename T, typename E>
 struct set_error_free_trait<T, E,
   typename void_type<
@@ -62,7 +66,7 @@ struct set_error_free_trait<T, E,
   ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
 
   using result_type = decltype(
-    set_error(declval<T>(), declval<E>()));
+    set_error(declval<T>(), declval<E>())); //类型
 
   ASIO_STATIC_CONSTEXPR(bool, is_noexcept = noexcept(
     set_error(declval<T>(), declval<E>())));

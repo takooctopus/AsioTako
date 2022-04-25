@@ -1,4 +1,5 @@
 //
+// TAKO：类型萃取 设置成结束 成员
 // traits/set_done_member.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -31,9 +32,13 @@
 namespace asio {
 namespace traits {
 
+///===================================================================
+//先制声明
 template <typename T, typename = void>
 struct set_done_member_default;
 
+///===================================================================
+//先制声明
 template <typename T, typename = void>
 struct set_done_member;
 
@@ -48,20 +53,22 @@ struct no_set_done_member
 
 #if defined(ASIO_HAS_DEDUCED_SET_DONE_MEMBER_TRAIT)
 
+///===================================================================
 template <typename T, typename = void>
 struct set_done_member_trait : no_set_done_member
 {
 };
 
+///===================================================================
 template <typename T>
 struct set_done_member_trait<T,
   typename void_type<
     decltype(declval<T>().set_done())
-  >::type>
+  >::type>  //这个有set_done函数
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
 
-  using result_type = decltype(declval<T>().set_done());
+  using result_type = decltype(declval<T>().set_done());    //同样的，主要是要一个返回结果，看看set_done()这个函数返回的类型
 
   ASIO_STATIC_CONSTEXPR(bool,
     is_noexcept = noexcept(declval<T>().set_done()));
@@ -88,12 +95,14 @@ struct set_done_member_trait :
 } // namespace detail
 namespace traits {
 
+///===================================================================
 template <typename T, typename>
 struct set_done_member_default :
   detail::set_done_member_trait<T>
 {
 };
 
+///===================================================================
 template <typename T, typename>
 struct set_done_member :
   set_done_member_default<T>

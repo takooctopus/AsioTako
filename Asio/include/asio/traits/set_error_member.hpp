@@ -1,4 +1,5 @@
 //
+// TAKO:设置异常成员
 // traits/set_error_member.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -40,6 +41,7 @@ struct set_error_member;
 } // namespace traits
 namespace detail {
 
+///===================================================================
 struct no_set_error_member
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = false);
@@ -48,11 +50,13 @@ struct no_set_error_member
 
 #if defined(ASIO_HAS_DEDUCED_SET_ERROR_MEMBER_TRAIT)
 
+///===================================================================
 template <typename T, typename E, typename = void>
 struct set_error_member_trait : no_set_error_member
 {
 };
 
+///===================================================================
 template <typename T, typename E>
 struct set_error_member_trait<T, E,
   typename void_type<

@@ -1,4 +1,5 @@
 //
+// TAKO: 作为接收者
 // execution/detail/as_receiver.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -27,46 +28,56 @@ namespace asio {
 namespace execution {
 namespace detail {
 
-template <typename Function, typename>
+template <typename Function, typename>  //看接收者，其实就是一个函数
 struct as_receiver
 {
-  Function f_;
+  Function f_;  //整个结构体的内部变量就是这一个函数
 
   template <typename F>
   explicit as_receiver(ASIO_MOVE_ARG(F) f, int)
-    : f_(ASIO_MOVE_CAST(F)(f))
+    : f_(ASIO_MOVE_CAST(F)(f))  //构造函数
   {
   }
 
 #if defined(ASIO_MSVC) && defined(ASIO_HAS_MOVE)
   as_receiver(as_receiver&& other)
-    : f_(ASIO_MOVE_CAST(Function)(other.f_))
+    : f_(ASIO_MOVE_CAST(Function)(other.f_))    //移动构造
   {
   }
 #endif // defined(ASIO_MSVC) && defined(ASIO_HAS_MOVE)
 
+  /// ============================================================================================
+  // 设置值为默认值 => 将函数对象置空
   void set_value()
     ASIO_NOEXCEPT_IF(noexcept(declval<Function&>()()))
   {
     f_();
   }
 
+  /// ============================================================================================
+  // 设置错误，直接结束
   template <typename E>
   void set_error(E) ASIO_NOEXCEPT
   {
     std::terminate();
   }
 
+  /// ============================================================================================
+  // 设置完成
   void set_done() ASIO_NOEXCEPT
   {
   }
 };
 
+/// ============================================================================================
+// 默认传入，是false
 template <typename T>
 struct is_as_receiver : false_type
 {
 };
 
+/// ============================================================================================
+// 传入的是一个as_receiver<>，那就是true
 template <typename Function, typename T>
 struct is_as_receiver<as_receiver<Function, T> > : true_type
 {

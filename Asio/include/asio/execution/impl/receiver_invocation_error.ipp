@@ -1,4 +1,5 @@
 //
+// TAKO:接收者唤醒异常【继承于std::runtime_error】
 // exection/impl/receiver_invocation_error.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //

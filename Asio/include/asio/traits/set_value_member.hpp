@@ -1,4 +1,5 @@
 //
+// TAKO: 设置值成员
 // traits/set_value_member.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -41,6 +42,7 @@ struct set_value_member;
 } // namespace traits
 namespace detail {
 
+/// =====================================================
 struct no_set_value_member
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = false);
@@ -49,6 +51,7 @@ struct no_set_value_member
 
 #if defined(ASIO_HAS_DEDUCED_SET_VALUE_MEMBER_TRAIT)
 
+/// =====================================================
 template <typename T, typename Vs, typename = void>
 struct set_value_member_trait : no_set_value_member
 {
@@ -56,6 +59,7 @@ struct set_value_member_trait : no_set_value_member
 
 #if defined(ASIO_HAS_VARIADIC_TEMPLATES)
 
+/// =====================================================
 template <typename T, typename... Vs>
 struct set_value_member_trait<T, void(Vs...),
   typename void_type<
@@ -65,10 +69,10 @@ struct set_value_member_trait<T, void(Vs...),
   ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
 
   using result_type = decltype(
-    declval<T>().set_value(declval<Vs>()...));
+    declval<T>().set_value(declval<Vs>()...));  //成员函数的设置值
 
   ASIO_STATIC_CONSTEXPR(bool, is_noexcept = noexcept(
-    declval<T>().set_value(declval<Vs>()...)));
+    declval<T>().set_value(declval<Vs>()...))); 
 };
 
 #else // defined(ASIO_HAS_VARIADIC_TEMPLATES)

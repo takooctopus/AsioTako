@@ -1,4 +1,5 @@
 //
+// TAKO: 能等价比较
 // traits/equality_comparable.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -38,6 +39,8 @@ struct equality_comparable;
 } // namespace traits
 namespace detail {
 
+///==================================================================
+// 默认的不能等价比较，定义了两个编译器常量
 struct no_equality_comparable
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = false);
@@ -46,29 +49,32 @@ struct no_equality_comparable
 
 #if defined(ASIO_HAS_DEDUCED_EQUALITY_COMPARABLE_TRAIT)
 
+///==================================================================
+// 默认继承上面的基础结构体
 template <typename T, typename = void>
 struct equality_comparable_trait : no_equality_comparable
 {
 };
 
+///==================================================================
 template <typename T>
 struct equality_comparable_trait<T,
   typename void_type<
     decltype(
       static_cast<void>(
         static_cast<bool>(declval<const T>() == declval<const T>())
-      ),
+      ),    // [无用式子] 1. true => bool => void 【保证==可用】
       static_cast<void>(
         static_cast<bool>(declval<const T>() != declval<const T>())
-      )
-    )
-  >::type>
+      )     // [实际式子] 2. false => bool => void 【保证!=可用】
+    )   //推导出来是 void
+  >::type>  // 推导出来 void
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
 
   ASIO_STATIC_CONSTEXPR(bool, is_noexcept =
     noexcept(declval<const T>() == declval<const T>())
-      && noexcept(declval<const T>() != declval<const T>()));
+      && noexcept(declval<const T>() != declval<const T>()));   //继承于下面的有无异常
 };
 
 #else // defined(ASIO_HAS_DEDUCED_EQUALITY_COMPARABLE_TRAIT)

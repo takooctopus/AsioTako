@@ -1,4 +1,4 @@
-//
+// TAKO:设置异常
 // execution/set_error.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -74,8 +74,11 @@ using asio::enable_if;
 using asio::traits::set_error_free;
 using asio::traits::set_error_member;
 
+///===================================================================
 void set_error();
 
+///===================================================================
+// 几种重载类型
 enum overload_type
 {
   call_member,
@@ -83,6 +86,7 @@ enum overload_type
   ill_formed
 };
 
+///===================================================================
 template <typename R, typename E, typename = void, typename = void>
 struct call_traits
 {
@@ -91,6 +95,8 @@ struct call_traits
   typedef void result_type;
 };
 
+///===================================================================
+// 用的成员函数那一份
 template <typename R, typename E>
 struct call_traits<R, void(E),
   typename enable_if<
@@ -101,6 +107,8 @@ struct call_traits<R, void(E),
   ASIO_STATIC_CONSTEXPR(overload_type, overload = call_member);
 };
 
+///===================================================================
+//用的自由函数那一份
 template <typename R, typename E>
 struct call_traits<R, void(E),
   typename enable_if<
@@ -114,9 +122,13 @@ struct call_traits<R, void(E),
   ASIO_STATIC_CONSTEXPR(overload_type, overload = call_free);
 };
 
+///=================================================================================================================
+// 执行结构体
 struct impl
 {
 #if defined(ASIO_HAS_MOVE)
+  ///===================================================================
+  // 成员函数
   template <typename R, typename E>
   ASIO_CONSTEXPR typename enable_if<
     call_traits<R, void(E)>::overload == call_member,
@@ -129,6 +141,8 @@ struct impl
     return ASIO_MOVE_CAST(R)(r).set_error(ASIO_MOVE_CAST(E)(e));
   }
 
+  ///===================================================================
+  // 自由函数
   template <typename R, typename E>
   ASIO_CONSTEXPR typename enable_if<
     call_traits<R, void(E)>::overload == call_free,
@@ -191,12 +205,16 @@ struct impl
 #endif // defined(ASIO_HAS_MOVE)
 };
 
+///===================================================================
+// 类型匹配返回静态变量
 template <typename T = impl>
 struct static_instance
 {
   static const T instance;
 };
 
+///===================================================================
+//类型不匹配返回默认构造
 template <typename T>
 const T static_instance<T>::instance = {};
 
@@ -205,11 +223,13 @@ namespace asio {
 namespace execution {
 namespace {
 
+///===================================================================
 static ASIO_CONSTEXPR const asio_execution_set_error_fn::impl&
   set_error = asio_execution_set_error_fn::static_instance<>::instance;
 
 } // namespace
 
+///===================================================================
 template <typename R, typename E>
 struct can_set_error :
   integral_constant<bool,
@@ -220,11 +240,13 @@ struct can_set_error :
 
 #if defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
+///===================================================================
 template <typename R, typename E>
 constexpr bool can_set_error_v = can_set_error<R, E>::value;
 
 #endif // defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
+///===================================================================
 template <typename R, typename E>
 struct is_nothrow_set_error :
   integral_constant<bool,
@@ -234,6 +256,7 @@ struct is_nothrow_set_error :
 
 #if defined(ASIO_HAS_VARIABLE_TEMPLATES)
 
+///===================================================================
 template <typename R, typename E>
 constexpr bool is_nothrow_set_error_v
   = is_nothrow_set_error<R, E>::value;

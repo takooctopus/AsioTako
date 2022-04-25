@@ -1,4 +1,5 @@
 //
+// TAKO:类型萃取，获取返回类型
 // traits/set_done_free.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -48,11 +49,13 @@ struct no_set_done_free
 
 #if defined(ASIO_HAS_DEDUCED_SET_DONE_FREE_TRAIT)
 
+///===================================================================
 template <typename T, typename = void>
 struct set_done_free_trait : no_set_done_free
 {
 };
 
+///===================================================================
 template <typename T>
 struct set_done_free_trait<T,
   typename void_type<
@@ -61,7 +64,7 @@ struct set_done_free_trait<T,
 {
   ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
 
-  using result_type = decltype(set_done(declval<T>()));
+  using result_type = decltype(set_done(declval<T>())); //返回类型
 
   ASIO_STATIC_CONSTEXPR(bool,
     is_noexcept = noexcept(set_done(declval<T>())));

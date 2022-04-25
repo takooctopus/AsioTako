@@ -133,7 +133,7 @@ using boost::result_of;
 using boost::true_type;
 #endif // defined(ASIO_HAS_STD_TYPE_TRAITS)
 
-template <typename> struct void_type { typedef void type; };
+template <typename> struct void_type { typedef void type; };	//定义一个void_type，将<>类型转换成void
 
 #if defined(ASIO_HAS_VARIADIC_TEMPLATES)
 

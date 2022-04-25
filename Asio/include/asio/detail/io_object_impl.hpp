@@ -1,4 +1,5 @@
 //
+// TAKO:IO对象的函数操作
 // io_object_impl.hpp
 // ~~~~~~~~~~~~~~~~~~
 //
@@ -18,7 +19,7 @@
 #include <new>
 #include "asio/detail/config.hpp"
 #include "asio/detail/type_traits.hpp"  //类型萃取
-#include "asio/execution/executor.hpp"  //
+#include "asio/execution/executor.hpp"  //执行器
 #include "asio/execution/context.hpp"
 #include "asio/io_context.hpp"
 #include "asio/query.hpp"
